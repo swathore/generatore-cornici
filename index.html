@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generatore Cornici</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      text-align: center;
+      font-family: 'Playfair Display', serif;
+      background: #f5f0e6;
+      color: #2c3e50;
+      margin: 0;
+      padding: 20px;
+      position: relative;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 50% 80%, rgba(255, 192, 203, 0.2) 0%, transparent 30%),
+        linear-gradient(45deg, rgba(255, 192, 203, 0.1) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255, 192, 203, 0.1) 25%, transparent 25%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 0C22.4 0 0 22.4 0 50s22.4 50 50 50 50-22.4 50-50S77.6 0 50 0zm0 90c-22.1 0-40-17.9-40-40s17.9-40 40-40 40 17.9 40 40-17.9 40-40 40z' fill='rgba(255, 192, 203, 0.15)'/%3E%3C/svg%3E"),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0c16.6 0 30 13.4 30 30S46.6 60 30 60 0 46.6 0 30 13.4 0 30 0zm0 50c11 0 20-9 20-20S41 10 30 10 10 19 10 30s9 20 20 20z' fill='rgba(255, 192, 203, 0.1)'/%3E%3C/svg%3E");
+      background-size: 100px 100px, 60px 60px;
+      opacity: 0.8;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.5em, 5vw, 2.5em);
+      color: #8b4513;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      position: relative;
+      padding: 0 40px;
+    }
+
+    h1::before, h1::after {
+      content: "❦";
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(139, 69, 19, 0.4);
+      font-size: 1.4em;
+    }
+
+    h1::before {
+      left: 0;
+    }
+
+    h1::after {
+      right: 0;
+    }
+
+    #canvas {
+      position: relative;
+      width: min(600px, 90vw);
+      height: min(800px, 120vw);
+      margin: auto;
+      background: white;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      border: 1px solid #d4c4b7;
+    }
+
+    .piece {
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .button-container {
+      margin: 30px auto;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      position: relative;
+      flex-wrap: wrap;
+      max-width: 600px;
+      padding: 0 20px;
+    }
+
+    .button-container::before, .button-container::after {
+      display: none;
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: clamp(14px, 4vw, 16px);
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer;
+      background-color: #8b4513;
+      color: #f5f0e6;
+      border: none;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: relative;
+      overflow: hidden;
+      min-width: 140px;
+    }
+
+    button::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: 0.5s;
+    }
+
+    button:hover {
+      background-color: #6b3410;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    button:hover::before {
+      left: 100%;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+
+      .button-container {
+        margin: 20px auto;
+        gap: 10px;
+      }
+
+      button {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Generatore di Cornici</h1>
+  <div id="canvas"></div>
+  <div class="button-container">
+    <button onclick="generateFrame()">Genera cornice</button>
+    <button onclick="saveFrame()">Salva cornice</button>
+  </div>
+
+  <script>
+    const edgeHeight = 100;
+
+    const sopraSotto = [
+      'sopra e sotto_Tavola disegno 1-01.svg',
+      'sopra e sotto_Tavola disegno 1-08.svg',
+      'sopra e sotto_Tavola disegno 1-07.svg',
+      'sopra e sotto_Tavola disegno 1-06.svg',
+      'sopra e sotto_Tavola disegno 1-03.svg',
+      'sopra e sotto_Tavola disegno 1-04.svg',
+      'sopra e sotto_Tavola disegno 1-02.svg',
+      'sopra e sotto_Tavola disegno 1-05.svg'
+    ];
+
+    const lati = [
+      'dettagli per i lati_Tavola disegno 1-20.svg',
+      'dettagli per i lati_Tavola disegno 1-17.svg',
+      'dettagli per i lati_Tavola disegno 1-16.svg',
+      'dettagli per i lati_Tavola disegno 1-11.svg',
+      'dettagli per i lati_Tavola disegno 1-24.svg',
+      'dettagli per i lati_Tavola disegno 1-23.svg',
+      'dettagli per i lati_Tavola disegno 1-18.svg',
+      'dettagli per i lati_Tavola disegno 1-19.svg',
+      'dettagli per i lati_Tavola disegno 1-03.svg',
+      'dettagli per i lati_Tavola disegno 1-22.svg',
+      'dettagli per i lati_Tavola disegno 1-04.svg',
+      'dettagli per i lati_Tavola disegno 1-21.svg',
+      'dettagli per i lati_Tavola disegno 1-05.svg',
+      'dettagli per i lati_Tavola disegno 1-07.svg',
+      'dettagli per i lati_Tavola disegno 1-06.svg',
+      'dettagli per i lati_Tavola disegno 1-09.svg',
+      'dettagli per i lati_Tavola disegno 1-02.svg',
+      'dettagli per i lati_Tavola disegno 1-10.svg',
+      'dettagli per i lati_Tavola disegno 1-08.svg',
+      'dettagli per i lati_Tavola disegno 1-01.svg'
+    ];
+
+    function randomItem(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function generateFrame() {
+      const canvas = document.getElementById("canvas");
+      canvas.innerHTML = "";
+
+      // SOPRA (4-5 elementi)
+      const numTop = 4 + Math.floor(Math.random() * 2);
+      const topElements = [];
+      for (let i = 0; i < Math.ceil(numTop/2); i++) {
+        topElements.push(randomItem(lati));
+      }
+
+      // Aggiungi elementi sopra
+      for (let i = 0; i < numTop; i++) {
+        const sopra = document.createElement("img");
+        const elementIndex = i < Math.ceil(numTop/2) ? i : numTop - 1 - i;
+        sopra.src = "assets/lati/" + topElements[elementIndex];
+        sopra.className = "piece";
+        sopra.style.top = "20px";
+        sopra.style.left = (i * (canvas.offsetWidth / numTop)) + "px";
+        sopra.style.width = (canvas.offsetWidth / numTop) + "px";
+        sopra.style.height = "auto";
+        sopra.style.transform = i < Math.ceil(numTop/2) ? "rotate(90deg)" : "rotate(90deg) scaleY(-1)";
+        sopra.style.transformOrigin = "center";
+        sopra.style.imageRendering = "high-quality";
+        sopra.style.objectFit = "contain";
+        canvas.appendChild(sopra);
+      }
+
+      // SOTTO (4-5 elementi) - usa gli stessi elementi di sopra
+      for (let i = 0; i < numTop; i++) {
+        const sotto = document.createElement("img");
+        const elementIndex = i < Math.ceil(numTop/2) ? i : numTop - 1 - i;
+        sotto.src = "assets/lati/" + topElements[elementIndex];
+        sotto.className = "piece";
+        sotto.style.bottom = "20px";
+        sotto.style.left = (i * (canvas.offsetWidth / numTop)) + "px";
+        sotto.style.width = (canvas.offsetWidth / numTop) + "px";
+        sotto.style.height = "auto";
+        sotto.style.transform = i < Math.ceil(numTop/2) ? "rotate(90deg)" : "rotate(90deg) scaleY(-1)";
+        sotto.style.transformOrigin = "center";
+        sotto.style.imageRendering = "high-quality";
+        sotto.style.objectFit = "contain";
+        canvas.appendChild(sotto);
+      }
+
+      // LATI SX/DX (5-7 elementi)
+      const numSides = 5 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < numSides; i++) {
+        let offset = edgeHeight + (i * ((canvas.offsetHeight - 2 * edgeHeight) / numSides));
+        const sideElement = randomItem(lati);
+        ["left", "right"].forEach(side => {
+          const lato = document.createElement("img");
+          lato.src = "assets/lati/" + sideElement;
+          lato.className = "piece";
+          lato.style.top = offset + "px";
+          lato.style[side] = "20px";
+          lato.style.height = "150px";
+          lato.style.width = "auto";
+          lato.style.imageRendering = "high-quality";
+          lato.style.objectFit = "contain";
+          canvas.appendChild(lato);
+        });
+      }
+    }
+
+    function saveFrame() {
+      const canvas = document.getElementById("canvas");
+      
+      // Create a temporary canvas to draw the frame with higher resolution
+      const scale = 2; // Increase resolution by 2x
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = canvas.offsetWidth * scale;
+      tempCanvas.height = canvas.offsetHeight * scale;
+      const ctx = tempCanvas.getContext("2d");
+      
+      // Enable image smoothing for better quality
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      // Scale up the context
+      ctx.scale(scale, scale);
+      
+      // Draw white background
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+      
+      // Convert all images to canvas
+      const images = canvas.getElementsByTagName("img");
+      const promises = Array.from(images).map(img => {
+        return new Promise((resolve) => {
+          const tempImg = new Image();
+          tempImg.crossOrigin = "anonymous";
+          tempImg.onload = () => {
+            const style = window.getComputedStyle(img);
+            const transform = style.transform;
+            const matrix = new DOMMatrix(transform);
+            
+            ctx.save();
+            
+            // Get the position
+            const left = parseInt(style.left);
+            const top = parseInt(style.top);
+            const width = parseInt(style.width);
+            const height = img.height * (width / img.width); // Maintain aspect ratio
+            
+            // Set the transform origin to center
+            ctx.translate(left + width/2, top + height/2);
+            
+            // Apply the rotation and flipping based on the element's position
+            if (style.top === "20px" || style.bottom === "20px") {
+              // For top and bottom elements
+              ctx.rotate(Math.PI / 2); // 90 degrees in radians
+              
+              // Check if this is in the second half of the elements
+              const index = parseInt(style.left) / (canvas.offsetWidth / (4 + Math.floor(Math.random() * 2)));
+              if (index >= Math.ceil((4 + Math.floor(Math.random() * 2))/2)) {
+                ctx.scale(1, -1); // Flip vertically
+              }
+            }
+            
+            // Draw the image centered
+            ctx.drawImage(tempImg, -width/2, -height/2, width, height);
+            
+            ctx.restore();
+            resolve();
+          };
+          tempImg.src = img.src;
+        });
+      });
+
+      // When all images are drawn, save the canvas with maximum quality
+      Promise.all(promises).then(() => {
+        const link = document.createElement("a");
+        link.download = "cornice.png";
+        link.href = tempCanvas.toDataURL("image/png", 1.0);
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
